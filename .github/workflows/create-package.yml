@@ -435,6 +435,7 @@ jobs:
 
       - name: Notificar sucesso
         if: ${{ success() }}
+        shell: bash
         run: |
           source /tmp/send_telegram_message.sh
           MESSAGE="✅ <b>[step 3/3] - Build finalizado com sucesso!</b>"
@@ -442,6 +443,7 @@ jobs:
 
       - name: Notificar erro
         if: ${{ failure() }}
+        shell: bash
         run: |
           source /tmp/send_telegram_message.sh
           MESSAGE="❌ <b>[step 3/3] - Falha no build. Verifique os logs.</b>"
