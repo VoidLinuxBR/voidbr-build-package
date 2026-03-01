@@ -43,6 +43,7 @@ env:
   PKGMAKE_PRIVATE_KEY: "${{ secrets.PKGMAKE_PRIVATE_KEY }}"
   PKGMAKE_PACKAGER: "${{ github.event.client_payload.packager || inputs.packager || 'Vilmar Catafesta <vvcatafesta@gmail.com>' }}"
   DEBUG: "${{ github.event.client_payload.tmate || inputs.tmate || false }}"
+  REPOSITORY: "${{ github.event.client_payload.repository }}"
 
 jobs:
   build:
@@ -74,14 +75,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
-      - name: Checkout do pacote recebido
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.client_payload.repository }}
-          token: ${{ secrets.ORGANIZATION_TOKEN }}
-          fetch-depth: 1
-          path: pkgmake
 
       - name: Create private.pem
         shell: bash
@@ -128,14 +121,22 @@ jobs:
             echo "prefix_DB=void"
           } > /root/.chili-make-repo.conf
 
+      - name: Checkout do pacote recebido
+        uses: actions/checkout@v4
+        with:
+          repository: ${{github.event.client_payload.repository}}
+          token: ${{ secrets.ORGANIZATION_TOKEN }}
+          fetch-depth: 1
+          path: ${{github.event.client_payload.repository}}
+
       - name: Build pkg
         shell: bash
         run: |
           cp -Rpva /root/. $HOME/.
-          cd pkgmake/pkgfile
+          cd ${{github.event.client_payload.repository}}/pkgfile
           pkgmake -s --packager "$PKGMAKE_PACKAGER"
 
-      - name: Atualizar pacote no repositorio
+      - name: Sincronizar pacote com repositorio remoto
         shell: bash
         run: |
           chili-make-repo -A void
