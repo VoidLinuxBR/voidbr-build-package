@@ -244,6 +244,8 @@ jobs:
             Package Name  : $TARGET_REPOSITORY
             </pre>"
 
+            MESSAGE="🔗 ${link_action}"
+
             # Remove as tags HTML e exibe o resultado no terminal
             echo -e "${green}$(sed 's/<[^>]*>//g' <<< "$MESSAGE")${reset}"
             # Envia a mensagem original com HTML para o Telegram
