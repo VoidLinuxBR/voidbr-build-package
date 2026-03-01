@@ -379,14 +379,14 @@ jobs:
           repository: ${{github.event.client_payload.repository}}
           token: ${{ secrets.ORGANIZATION_TOKEN }}
           fetch-depth: 1
-          path: ${{github.event.client_payload.repository}}
+          path: "$REPOSITORY"
 
       - name: Build pkg
         shell: bash
         run: |
           source /tmp/send_telegram_message.sh
           cp -Rpa /root/. $HOME/. || true
-          cd ${{github.event.client_payload.repository}}/pkgfile
+          cd "$REPOSITORY"/pkgfile
           pkgmake -s --packager "$PKGMAKE_PACKAGER"
           MESSAGE="🚀 <b>[step 2/3] - Pacote construido</b>"
           send_telegram_msg "$MESSAGE"
