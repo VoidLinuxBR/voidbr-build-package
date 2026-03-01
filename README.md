@@ -1,3 +1,3 @@
-# voidbr-pkgfile
+# voidbr-build-package
 
-Template for VoidBR pkgmake/pkgfile packages
+Build packaget for VoidBR
