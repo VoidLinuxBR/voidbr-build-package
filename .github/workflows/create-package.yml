@@ -369,6 +369,16 @@ jobs:
           xbps-install --update --yes voidbr-pkgmake void-utils tmate openssh git glibc-locales
           vinstall -Scc
 
+      - name: Configurar locale
+        shell: bash
+        run: |
+          source /tmp/send_telegram_message.sh
+          echo "pt_BR.UTF-8 UTF-8" > /etc/default/libc-locales
+          xbps-reconfigure -f glibc-locales || true
+          export LANG=pt_BR.UTF-8
+          export LANGUAGE=pt_BR.UTF-8
+          cp -Rpa /root/. $HOME/. || true
+
       # 3. Iniciar sessão tmate imediatamente dentro do container
       - name: Setup TMATE Session in CONTAINER
         uses: mxschmitt/action-tmate@v3
@@ -434,16 +444,6 @@ jobs:
           token: ${{ secrets.ORGANIZATION_TOKEN }}
           fetch-depth: 1
           path: pkgmake
-
-      - name: Configurar locale
-        shell: bash
-        run: |
-          source /tmp/send_telegram_message.sh
-          echo "pt_BR.UTF-8 UTF-8" > /etc/default/libc-locales
-          xbps-reconfigure -f glibc-locales || true
-          export LANG=pt_BR.UTF-8
-          export LANGUAGE=pt_BR.UTF-8
-          cp -Rpa /root/. $HOME/. || true
 
       - name: Build pkg ${{ env.TARGET_REPOSITORY }}
         shell: bash
