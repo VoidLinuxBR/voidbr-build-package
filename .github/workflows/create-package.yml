@@ -1,5 +1,38 @@
+#  create-iso.yml
+#  Created: 2024/09/15 - 08:10
+#  Altered: qui 19 fev 2026 21:40:30 -04
+#  Updated: sex 27 fev 2026 00:42:57 -04
+#
+#  Copyright (c) 2024-2026, Vilmar Catafesta <vcatafesta@gmail.com>
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions
+#  are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+#  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+#  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+#  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+#  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+#  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+#  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
 name: VoidBR Build Package
 
+#concurrency:
+#  group: build-iso-${{ github.workflow }}
+#  cancel-in-progress: false
+
+# Gatilhos para o workflow
 on:
   #  push:
   #    branches: ["main"]
@@ -57,6 +90,228 @@ jobs:
       image: vcatafesta/voidlinux-docker:1.5 #seg 16 fev 2026 23:52:08 -04
       options: -v ${{ github.workspace }}:/workspace --privileged
     steps:
+      - name: Obter a hora atual
+        id: time
+        shell: bash
+        run: |
+          #Obter a hora atual
+          #echo "::set-output name=time::$(date +'%Y.%m.%d-%H%M')"
+          echo "time=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
+
+      - name: Capturar hora de início do workflow
+        id: start-time
+        shell: bash
+        run: |
+          START_TIME=$(date +"%Y-%m-%d %H:%M:%S")  # Hora completa
+          START_TIMESTAMP=$(date +%s)  # Timestamp em segundos
+          echo "Início do Workflow: $START_TIME"
+          echo "START_TIME=$START_TIME"             >> $GITHUB_ENV
+          echo "START_TIMESTAMP=$START_TIMESTAMP"   >> $GITHUB_ENV
+          echo "START_TIME='$START_TIME'"           >> shared_file.txt
+          echo "START_TIMESTAMP='$START_TIMESTAMP'" >> shared_file.txt
+
+      - name: Create Global Helpers Script - Definir a função send_telegram_message no script temporário
+        shell: bash
+        env:
+          TELEGRAM_TOKEN: "${{ inputs.telegram_token }}"
+          TELEGRAM_VOIDBR_ISO_TOKEN_BOT: "${{ inputs.voidbr_packages_token_bot }}"
+          TELEGRAM_CHAT_ID: "${{ inputs.telegram_chat_id }}"
+          TELEGRAM_MESSAGE_THREAD_ID: "${{ inputs.telegram_message_thread_id }}"
+        run: |
+          #Definir a função send_telegram_message no script temporário
+          sudo rm -rf /tmp/send_telegram_message.sh  # Remove se for diretório
+          cat << 'EOF' > /tmp/send_telegram_message.sh
+          export TERM=${TERM:-xterm}
+          export TERM=${TERM:-xterm-256color}
+
+          #Definindo variáveis de cores
+          export reset="\033[0m"
+          export rst="\033[0m"
+          export green="\033[01;32m"
+          export red="\033[01;31m"
+          export blue="\033[01;34m"
+          export cyan="\033[01;36m"
+          export pink="\033[01;35m"
+          export yellow="\033[01;33m"
+          alias ls='ls -lha --color=auto'
+          alias dir='ls -lha --color=auto'
+
+          die() {
+            local msg="$1"
+            msg="$(sed 's/<[^>]*>//g' <<< "$msg")" # Remove as tags HTML
+            echo -e "BP=>${cyan}error: ${red}${msg}${reset}"
+            exit  1
+          }
+          export -f die
+
+          msg() {
+            local msg="$1"
+            msg="$(sed 's/<[^>]*>//g' <<< "$msg")" # Remove as tags HTML
+            echo -e "BIV=>${cyan}running: ${yellow}${msg}${reset}"
+          }
+
+          msg_tab() {
+            local msg="$1"
+            msg="$(sed 's/<[^>]*>//g' <<< "$msg")" # Remove as tags HTML
+            echo -e "BIV=>${cyan}info   : ${yellow}${msg}${reset}"
+          }
+
+          msg_raw() {
+            local msg="$1"
+            # Remove tags HTML, se existirem
+            #msg="$(sed 's/<[^>]*>//g' <<< "$msg")"
+
+            # Verifica se existe ':' na mensagem
+            if [[ "$msg" == *:* ]]; then
+              # Divide a string antes e depois do primeiro ':'
+              local before_colon="${msg%%:*}:"
+              local after_colon="${msg#*: }"
+              # Aplica as cores
+              msg="${cyan}${before_colon} ${yellow}${after_colon}${reset}"
+            else
+              # Se não houver ':', aplica apenas a cor padrão
+              msg="${cyan}${msg}${reset}"
+            fi
+            echo -e "$msg"
+          }
+          export -f msg_raw
+
+          msg_ok() {
+            local msg="$1"
+            msg="$(sed 's/<[^>]*>//g' <<< "$msg")" # Remove as tags HTML
+            echo -e "BP=>${cyan}feito  : ${green}${msg}${reset}"
+          }
+          export -f msg_ok
+
+          msg_run() {
+            local msg="$*"
+            echo -e "BP=>${cyan}running: ${yellow}${msg}${reset}"
+
+            # Executa o comando e captura o código de saída
+            if ! eval "$msg"; then
+              echo -e "BP=>${red}Erro ao executar: ${yellow}${msg}${reset}" >&2
+              return 1
+            fi
+            return 0
+          }
+          export -f msg_run
+
+          msg_info() {
+            local msg="$1"
+            msg="$(sed 's/<[^>]*>//g' <<< "$msg")" # Remove as tags HTML
+            echo -e "BIV=>${yellow}info   : ${cyan}${msg}${reset}"
+          }
+
+          msg_warning() {
+            local msg="$1"
+            msg="$(sed 's/<[^>]*>//g' <<< "$msg")" # Remove as tags HTML
+            echo -e "BIV=>${red}warning: ${orange}${msg}${reset}"
+          }
+
+          replicate() {
+            local char=${1:-'#'}
+            local nsize=${2:-$(tput cols)}
+            local line
+            printf -v line "%*s" "$nsize" && echo -e "${blue}${line// /$char}${reset}"
+          }
+          export -f replicate
+
+          function send_telegram_msg() {
+            local message="$1"
+            local parse_mode="$2"
+
+            # Define parse_mode como "MarkdownV2" se não for especificado
+            [[ -z $parse_mode ]] && parse_mode="HTML"
+
+            MESSAGE="${{ github.workflow }} - $message
+            <pre>
+            Job         : #${GITHUB_RUN_NUMBER}
+            Edition     : $iso_edition
+            ISO Name    : $ISO_BASENAME
+            </pre>"
+
+            # Remove as tags HTML e exibe o resultado no terminal
+            echo -e "${green}$(sed 's/<[^>]*>//g' <<< "$MESSAGE")${reset}"
+            # Envia a mensagem original com HTML para o Telegram
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_ISO_TOKEN_BOT}/sendMessage" \
+              -d chat_id="${CHAT_ID}" \
+              -d message_thread_id="${MESSAGE_THREAD_ID}" \
+              -d text="${MESSAGE}" \
+              -d parse_mode="HTML"
+          }
+          export -f send_telegram_msg
+
+          function send_telegram_message() {
+            local message="$1"
+            local parse_mode="$2"
+
+            # Define parse_mode como "MarkdownV2" se não for especificado
+            [[ -z $parse_mode ]] && parse_mode="HTML"
+
+            link_action=https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+            MESSAGE="🚀 <b>${{ github.workflow }}</b>
+            <pre>
+            Job         : #${GITHUB_RUN_NUMBER}
+            Workflow    : ${{ github.workflow }}
+            Triggered   : ${started_by_user}
+            Inicio      : $START_TIME
+            Distroname  : $iso_distroname
+            Edition     : $iso_edition
+            Kernel      : $KERNEL_VERSION
+            Release     : $RELEASE_TAG
+            Tmate       : $DEBUG
+            ISO Name    : $ISO_BASENAME
+            </pre>
+            <b>Link:</b> <a href='${link_action}'>Visualizar no GitHub</a>"
+
+            MESSAGE="${{ github.workflow }} - $message
+            <b>Job           :</b> <a href='${link_action}'>#${GITHUB_RUN_NUMBER}</a>
+            <b>Workflow file :</b> <a href='${wf_url}'>${wf_file}</a>
+            <b>Triggered     :</b> <code>${started_by_user}/${triggered_by_user}</code>
+            <b>Start         :</b> <code>${START_TIME}</code>
+            <b>End           :</b> <code>${END_TIME}</code>
+            <b>Duration      :</b> <code>${hours}h ${minutes}m ${seconds}s</code>
+            <b>Distroname    :</b> <code>${iso_distroname}</code>
+            <b>Iso Profile   :</b> <code>${iso_profile}</code>
+            <b>Edition       :</b> <code>${iso_edition}</code>
+            <b>Build dir     :</b> <code>${PROFILE_PATH}</code>
+            <b>Release       :</b> <code>${RELEASE_TAG}</code>
+            <b>Kernel        :</b> <code>${KERNEL_VERSION}</code>
+            <b>Tmate         :</b> <code>${DEBUG}</code>
+            <b>Tam ISO       :</b> <code>${iso_size}</code>
+            <b>Download      :</b> <a href='${DOWNLOAD_URL_ISO}'>${ISO_BASE_NAME}.iso</a> <code>(${iso_size})</code>
+            <b>Download      :</b> <a href='${DOWNLOAD_URL_ISO}'>${ISO_BASE_NAME}.iso.md5</a> <code>(${iso_size})</code>
+            <b>Download      :</b> <a href='${DOWNLOAD_URL_ZIP}'>${ISO_BASE_NAME}.zip</a> <code>(${iso_size})</code>
+            <b>Download      :</b> <a href='${DOWNLOAD_URL_GZ}'>${ISO_BASE_NAME}.tar.gz</a> <code>(${iso_size})</code>"
+
+            # Envia a mensagem original com HTML para o Telegram
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_ISO_TOKEN_BOT}/sendMessage" \
+              -d chat_id="${CHAT_ID}" \
+              -d message_thread_id="${MESSAGE_THREAD_ID}" \
+              -d text="${MESSAGE}" \
+              -d parse_mode="HTML"
+          }
+          export -f send_telegram_message
+          EOF
+          chmod +x /tmp/send_telegram_message.sh
+
+      - name: Enviar notificação inicial para o Telegram
+        shell: bash
+        run: |
+          source /tmp/send_telegram_message.sh
+          replicate
+          msg "- name: Enviar notificação inicial para o Telegram"
+
+          msg_tab "ISO_BRANCH='$iso_branch'"
+          msg_tab "ISO_BRANCH='$iso_branch'"
+          echo "ISO_BRANCH='$iso_branch'" >> GITHUB_ENV
+          echo "ISO_BRANCH='$iso_branch'" >> shared_file.txt
+
+          MESSAGE="🚀 <b>[step 1/3] - Iniciando WorkFlow</b>"
+          send_telegram_message "$MESSAGE"
+          replicate
+
       - name: update
         run: |
           xbps-install -Syu xbps
