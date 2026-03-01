@@ -407,7 +407,7 @@ jobs:
           source /tmp/send_telegram_message.sh
           cp -Rpa /root/. $HOME/. || true
           cd pkgmake/pkgfile
-          LC_ALL=C pkgmake -s --packager "$PKGMAKE_PACKAGER"
+          LC_ALL=pt_BR.UTF-8 pkgmake -s --packager "$PKGMAKE_PACKAGER"
           MESSAGE="🚀 <b>[step 2/3] - Pacote construido</b>"
           send_telegram_msg "$MESSAGE"
 
