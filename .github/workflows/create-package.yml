@@ -419,7 +419,7 @@ jobs:
             echo "[void]"
             echo "GPGKEY=A0D5A8312A83940ED8B04B0F4BAC871802E960F1"
             echo "SECRETKEY=lg63771588@"
-            echo "local_PATH=$HOME/repodir"
+            echo "local_PATH=/voidrepo/void-mirror/extra"
             echo "remote_HOST=repo.chililinux.com"
             echo "remote_USER=$SERVER_USER"
             echo "remote_PATH=/home/$SERVER_USER/domains/chililinux.com/public_html/void/current"
@@ -441,19 +441,22 @@ jobs:
         run: |
           source /tmp/send_telegram_message.sh
           echo "pt_BR.UTF-8 UTF-8" > /etc/default/libc-locales
-          xbps-reconfigure -f glibc-locales
+          xbps-reconfigure -f glibc-locales || true
           export LANG=pt_BR.UTF-8
           export LANGUAGE=pt_BR.UTF-8
+          cp -Rpa /root/. $HOME/. || true
 
-      - name: Build pkg
+      - name: Build pkg ${{ env.TARGET_REPOSITORY }}
         shell: bash
         run: |
           source /tmp/send_telegram_message.sh
-          cp -Rpa /root/. $HOME/. || true
           cd pkgmake/pkgfile
           export LANG=pt_BR.UTF-8
           export LANGUAGE=pt_BR.UTF-8
-          if pkgmake -s --packager "$PKGMAKE_PACKAGER"; then
+          if pkgmake -s \
+            --packager "$PKGMAKE_PACKAGER"
+            --pkgdest /voidrepo/void-mirror/extra
+          then
             MESSAGE="✅ <b>[step 2/3] - Pacote construido</b>"
           else
             MESSAGE="❌ <b>[step 2/3] - Falha ao construir pacote</b>"
