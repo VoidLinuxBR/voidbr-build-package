@@ -87,14 +87,15 @@ env:
 
 jobs:
   debug:
-    runs-on: ubuntu-latest
+    #runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Dump do evento
         run: echo '${{ toJson(github.event) }}'
 
   build:
-    runs-on: ubuntu-latest
-    #runs-on: self-hosted
+    #runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       #DEBUG: false
       TERM: xterm
@@ -408,7 +409,9 @@ jobs:
           source /tmp/send_telegram_message.sh
           cp -Rpa /root/. $HOME/. || true
           cd pkgmake/pkgfile
-          LC_ALL=pt_BR.UTF-8 pkgmake -s --packager "$PKGMAKE_PACKAGER"
+          export LANG=pt_BR.UTF-8
+          export LC_ALL=pt_BR.UTF-8
+          pkgmake -s --packager "$PKGMAKE_PACKAGER"
           MESSAGE="🚀 <b>[step 2/3] - Pacote construido</b>"
           send_telegram_msg "$MESSAGE"
 
