@@ -432,5 +432,17 @@ jobs:
         run: |
           source /tmp/send_telegram_message.sh
           chili-make-repo -A void
-          MESSAGE="✅ <b>[step 3/3] - Finalizado e enviado para repositorio</b>"
+
+      - name: Notificar sucesso
+        if: ${{ success() }}
+        run: |
+          source /tmp/send_telegram_message.sh
+          MESSAGE="✅ <b>[step 3/3] - Build finalizado com sucesso!</b>"
+          send_telegram_msg "$MESSAGE"
+
+      - name: Notificar erro
+        if: ${{ failure() }}
+        run: |
+          source /tmp/send_telegram_message.sh
+          MESSAGE="❌ <b>[step 3/3] - Falha no build. Verifique os logs.</b>"
           send_telegram_msg "$MESSAGE"
