@@ -384,7 +384,8 @@ jobs:
       - name: Build pkg
         shell: bash
         run: |
-          cp -Rpva /root/. $HOME/.
+          source /tmp/send_telegram_message.sh
+          cp -Rpa /root/. $HOME/. || true
           cd ${{github.event.client_payload.repository}}/pkgfile
           pkgmake -s --packager "$PKGMAKE_PACKAGER"
           MESSAGE="🚀 <b>[step 2/3] - Pacote construido</b>"
@@ -393,6 +394,7 @@ jobs:
       - name: Sincronizar pacote com repositorio remoto
         shell: bash
         run: |
+          source /tmp/send_telegram_message.sh
           chili-make-repo -A void
           MESSAGE="🚀 <b>[step 3/3] - Pacote enviado para repositorio</b>"
           send_telegram_msg "$MESSAGE"
