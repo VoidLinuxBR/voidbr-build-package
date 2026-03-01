@@ -80,6 +80,10 @@ env:
   iso_distroname: 'voidbr'
   started_by_user: "${{ github.actor }}"
   triggered_by_user: "${{ github.triggering_actor }}"
+  TARGET_REPOSITORY: ${{
+    github.event_name == 'workflow_dispatch' && inputs.repository ||
+    github.event.client_payload.repository
+  }}
 
 jobs:
   debug:
@@ -235,7 +239,7 @@ jobs:
             Distroname    : $iso_distroname
             Release       : $RELEASE_TAG
             Tmate         : $DEBUG
-            Package Name  : $çREPOSITORY
+            Package Name  : $TARGET_REPOSITORY
             </pre>"
 
             # Remove as tags HTML e exibe o resultado no terminal
@@ -393,7 +397,7 @@ jobs:
       - name: Checkout do pacote recebido
         uses: actions/checkout@v4
         with:
-          repository: ${{github.event.client_payload.repository}}
+          repository: ${{ env.TARGET_REPOSITORY }}
           token: ${{ secrets.ORGANIZATION_TOKEN }}
           fetch-depth: 1
           path: pkgmake
