@@ -233,9 +233,10 @@ jobs:
             [[ -z $parse_mode ]] && parse_mode="HTML"
 
             link_action="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            MESSAGE="🔗 ${link_action}"
             MESSAGE="${{ github.workflow }} - $message
+            <a href=\"${link_action}\">▶ Job #${GITHUB_RUN_NUMBER}</a>
             <pre>
-            Job           : <a href=\"${link_action}\">#${GITHUB_RUN_NUMBER}</a>
             Triggered     : ${started_by_user}
             Inicio        : $START_TIME
             Distroname    : $iso_distroname
@@ -243,8 +244,6 @@ jobs:
             Tmate         : $DEBUG
             Package Name  : $TARGET_REPOSITORY
             </pre>"
-
-            MESSAGE="🔗 ${link_action}"
 
             # Remove as tags HTML e exibe o resultado no terminal
             echo -e "${green}$(sed 's/<[^>]*>//g' <<< "$MESSAGE")${reset}"
