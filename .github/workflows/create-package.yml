@@ -222,9 +222,9 @@ jobs:
 
             MESSAGE="${{ github.workflow }} - $message
             <pre>
-            Job         : #${GITHUB_RUN_NUMBER}
-            Edition     : $iso_edition
-            ISO Name    : $ISO_BASENAME
+            Job           : #${GITHUB_RUN_NUMBER}
+            Edition       : $iso_edition
+            Package Name  : $REPOSITORY
             </pre>"
 
             # Remove as tags HTML e exibe o resultado no terminal
@@ -306,7 +306,7 @@ jobs:
           echo "ISO_BRANCH='$iso_branch'" >> shared_file.txt
 
           MESSAGE="🚀 <b>[step 1/3] - Iniciando WorkFlow</b>"
-          send_telegram_message "$MESSAGE"
+          send_telegram_msg "$MESSAGE"
           replicate
 
       - name: update
