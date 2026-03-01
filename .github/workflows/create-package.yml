@@ -239,7 +239,7 @@ jobs:
               -d text="${MESSAGE}" \
               -d parse_mode="HTML"
 
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_TOKEN_BOT}/sendMessage" \
+            curl -s -X POST "https://api.telegram.org/${TELEGRAM_VOIDBR_TOKEN_BOT}/sendMessage" \
               -d chat_id="${TELEGRAM_VOIDBR_BR_CHAT_ID:}" \
               -d message_thread_id="${TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
