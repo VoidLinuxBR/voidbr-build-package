@@ -232,9 +232,10 @@ jobs:
             # Define parse_mode como "MarkdownV2" se não for especificado
             [[ -z $parse_mode ]] && parse_mode="HTML"
 
+            link_action=https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
             MESSAGE="${{ github.workflow }} - $message
             <pre>
-            Job           : #${GITHUB_RUN_NUMBER}
+            Job           : <a href='${link_action}'>#${GITHUB_RUN_NUMBER}</a>
             Triggered     : ${started_by_user}
             Inicio        : $START_TIME
             Distroname    : $iso_distroname
