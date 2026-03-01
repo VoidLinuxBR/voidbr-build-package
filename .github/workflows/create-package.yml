@@ -334,7 +334,7 @@ jobs:
       - name: update
         run: |
           xbps-install -Syu xbps
-          xbps-install --update --yes voidbr-pkgmake void-utils tmate openssh git
+          xbps-install --update --yes voidbr-pkgmake void-utils tmate openssh git glibc-locales
           vinstall -Scc
 
       # 3. Iniciar sessão tmate imediatamente dentro do container
@@ -403,6 +403,16 @@ jobs:
           fetch-depth: 1
           path: pkgmake
 
+      - name: Configurar locale
+        shell: bash
+        run: |
+          source /tmp/send_telegram_message.sh
+          echo "pt_BR.UTF-8 UTF-8" > /etc/default/libc-locales
+          xbps-reconfigure -f glibc-locales
+          export LANG=pt_BR.UTF-8
+          export LANGUAGE=pt_BR.UTF-8
+          export LC_ALL=pt_BR.UTF-8
+
       - name: Build pkg
         shell: bash
         run: |
@@ -410,6 +420,7 @@ jobs:
           cp -Rpa /root/. $HOME/. || true
           cd pkgmake/pkgfile
           export LANG=pt_BR.UTF-8
+          export LANGUAGE=pt_BR.UTF-8
           export LC_ALL=pt_BR.UTF-8
           pkgmake -s --packager "$PKGMAKE_PACKAGER"
           MESSAGE="🚀 <b>[step 2/3] - Pacote construido</b>"
