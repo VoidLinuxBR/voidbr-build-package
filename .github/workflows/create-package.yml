@@ -80,6 +80,7 @@ env:
   DEBUG: "${{ github.event.client_payload.tmate || inputs.tmate || false }}"
   REPOSITORY: "${{ github.event.client_payload.repository }}"
   TELEGRAM_VOIDBR_BR_CHAT_ID: '-1001114128035'
+  TELEGRAM_VOIDBR_TOKEN_BOT: 'bot7990667558:AAHBc7J0yiug3amKxjTKkaJMXF9EEb_eo1c'
   TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID: '75354'
 
 jobs:
@@ -238,7 +239,7 @@ jobs:
               -d text="${MESSAGE}" \
               -d parse_mode="HTML"
 
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN_BOT}/sendMessage" \
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_TOKEN_BOT}/sendMessage" \
               -d chat_id="${TELEGRAM_VOIDBR_BR_CHAT_ID:}" \
               -d message_thread_id="${TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
