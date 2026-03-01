@@ -81,6 +81,8 @@ env:
   started_by_user: "${{ github.actor }}"
   triggered_by_user: "${{ github.triggering_actor }}"
   TARGET_REPOSITORY: "${{github.event_name == 'workflow_dispatch' && inputs.repository || github.event.client_payload.repository}}"
+  LANG: pt_BR.UTF-8
+  LC_ALL: pt_BR.UTF-8
 
 jobs:
   debug:
