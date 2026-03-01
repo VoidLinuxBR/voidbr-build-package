@@ -413,5 +413,5 @@ jobs:
         run: |
           source /tmp/send_telegram_message.sh
           chili-make-repo -A void
-          MESSAGE="🚀 <b>[step 3/3] - Pacote enviado para repositorio</b>"
+          MESSAGE="✅ <b>[step 3/3] - Finalizado e enviado para repositorio</b>"
           send_telegram_msg "$MESSAGE"
