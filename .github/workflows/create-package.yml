@@ -67,6 +67,9 @@ env:
   TELEGRAM_TOKEN_BOT: "${{ secrets.VOIDBR_PACKAGES_TOKEN_BOT }}"
   TELEGRAM_CHAT_ID: "${{ secrets.CHAT_ID }}"
   TELEGRAM_MESSAGE_THREAD_ID: "${{ secrets.MESSAGE_THREAD_ID_PACKAGE }}"
+  TELEGRAM_VTELEGRAM_VOIDBR_BR_PACKAGES_CHAT_IDOIDBR_BR_PACKAGES_TOKEN_BOT: "{{secrets.VOIDBR_BR_PACKAGES_TOKEN_BOT}}"
+  TELEGRAM_VOIDBR_BR_PACKAGES_CHAT_ID: "{{secrets.VOIDBR_BR_PACKAGES_CHAT_ID}}"
+  TELEGRAM_VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID: "{{secrets.VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}}"
   SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
   SERVER_HOST: "${{ secrets.SERVER_HOST }}"
   SERVER_USER: "${{ secrets.SERVER_USER }}"
@@ -75,9 +78,6 @@ env:
   PKGMAKE_PACKAGER: "${{ github.event.client_payload.packager || inputs.packager || 'Vilmar Catafesta <vvcatafesta@gmail.com>' }}"
   DEBUG: "${{ github.event.client_payload.tmate || inputs.tmate || false }}"
   REPOSITORY: "${{ github.event.client_payload.repository || inputs.repository }}"
-  TELEGRAM_VOIDBR_BR_PACKAGES_TOKEN_BOT: "{{secrets.VOIDBR_BR_PACKAGES_TOKEN_BOT}}"
-  TELEGRAM_VOIDBR_BR_PACKAGES_CHAT_ID: "{{secrets.VOIDBR_BR_PACKAGES_CHAT_ID}}"
-  TELEGRAM_VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID: "{{secrets.VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}}"
   ISO_DISTRONAME: "voidbr"
   STARTED_BY_USER: "${{ github.actor }}"
   TRIGGERED_BY_USER: "${{ github.triggering_actor }}"
@@ -282,13 +282,13 @@ jobs:
               -d chat_id="${TELEGRAM_CHAT_ID}" \
               -d message_thread_id="${TELEGRAM_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
-              -d parse_mode="$parse_mode"
+              -d parse_mode="HTML"
 
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_BR_PACKAGES_TOKEN_BOT}/sendMessage" \
               -d chat_id="${TELEGRAM_VOIDBR_BR_PACKAGES_CHAT_ID}" \
               -d message_thread_id="${TELEGRAM_VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
-              -d parse_mode="$parse_mode"
+              -d parse_mode="HTML"
 
           }
           export -f send_telegram_msg
@@ -341,7 +341,7 @@ jobs:
               -d chat_id="${TELEGRAM_CHAT_ID}" \
               -d message_thread_id="${TELEGRAM_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
-              -d parse_mode="$parse_mode"
+              -d parse_mode="HTML"
           }
           export -f send_telegram_message
           EOF
