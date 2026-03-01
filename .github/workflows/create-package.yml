@@ -359,7 +359,7 @@ jobs:
           echo "ISO_BRANCH='$iso_branch'" >> GITHUB_ENV
           echo "ISO_BRANCH='$iso_branch'" >> shared_file.txt
 
-          MESSAGE="🚀 <b>[step 1/3] - Iniciando WorkFlow</b>"
+          MESSAGE="🚀 <b>[step 1/3] - Iniciando construcao do pacote $TARGET_REPOSITORY</b>"
           send_telegram_msg "$MESSAGE"
           replicate
 
