@@ -74,16 +74,13 @@ env:
   PKGMAKE_PACKAGER: "${{ github.event.client_payload.packager || inputs.packager || 'Vilmar Catafesta <vvcatafesta@gmail.com>' }}"
   DEBUG: "${{ github.event.client_payload.tmate || inputs.tmate || false }}"
   REPOSITORY: "${{ github.event.client_payload.repository || inputs.repository }}"
-  TELEGRAM_VOIDBR_BR_CHAT_ID: '-1001114128035'
-  TELEGRAM_VOIDBR_TOKEN_BOT: 'bot7990667558:AAHBc7J0yiug3amKxjTKkaJMXF9EEb_eo1c'
-  TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID: '75354'
-  iso_distroname: 'voidbr'
+  TELEGRAM_VOIDBR_BR_CHAT_ID: "-1001114128035"
+  TELEGRAM_VOIDBR_TOKEN_BOT: "bot7990667558:AAHBc7J0yiug3amKxjTKkaJMXF9EEb_eo1c"
+  TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID: "75354"
+  iso_distroname: "voidbr"
   started_by_user: "${{ github.actor }}"
   triggered_by_user: "${{ github.triggering_actor }}"
-  TARGET_REPOSITORY: ${{
-    github.event_name == 'workflow_dispatch' && inputs.repository ||
-    github.event.client_payload.repository
-  }}
+  TARGET_REPOSITORY: "${{github.event_name == 'workflow_dispatch' && inputs.repository || github.event.client_payload.repository}}"
 
 jobs:
   debug:
