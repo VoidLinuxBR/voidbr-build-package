@@ -1,7 +1,7 @@
 #  create-iso.yml
 #  Created: 2024/09/15 - 08:10
 #  Altered: qui 19 fev 2026 21:40:30 -04
-#  Updated: sex 27 fev 2026 00:42:57 -04
+#  Updated: dom 01 mar 2026 03:46:54 -04
 #
 #  Copyright (c) 2024-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  All rights reserved.
@@ -49,10 +49,6 @@ on:
         description: "Empacotador"
         required: true
         default: "Vilmar Catafesta <vcatafesta@gmail.com>"
-      package:
-        type: string
-        description: "Pacote para construir"
-        required: true
       repository:
         type: string
         description: "Repositorio para construir"
@@ -85,9 +81,13 @@ env:
   started_by_user: "${{ github.actor }}"
   triggered_by_user: "${{ github.triggering_actor }}"
 
-
-
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump do evento
+        run: echo '${{ toJson(github.event) }}'
+
   build:
     runs-on: ubuntu-latest
     #runs-on: self-hosted
@@ -235,7 +235,7 @@ jobs:
             Distroname    : $iso_distroname
             Release       : $RELEASE_TAG
             Tmate         : $DEBUG
-            Package Name  : $REPOSITORY
+            Package Name  : $çREPOSITORY
             </pre>"
 
             # Remove as tags HTML e exibe o resultado no terminal
