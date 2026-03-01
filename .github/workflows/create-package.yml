@@ -64,12 +64,12 @@ on:
 
 env:
   GITHUB_TOKEN: "${{ secrets.ORGANIZATION_TOKEN }}"
-  TELEGRAM_TOKEN_BOT: "${{ secrets.VOIDBR_PACKAGES_TOKEN_BOT }}"
-  TELEGRAM_CHAT_ID: "${{ secrets.CHAT_ID }}"
-  TELEGRAM_MESSAGE_THREAD_ID: "${{ secrets.MESSAGE_THREAD_ID_PACKAGE }}"
-  TELEGRAM_VOIDBR_BR_PACKAGES_TOKEN_BOT: "{{secrets.VOIDBR_BR_PACKAGES_TOKEN_BOT}}"
-  TELEGRAM_VOIDBR_BR_PACKAGES_CHAT_ID: "{{secrets.VOIDBR_BR_PACKAGES_CHAT_ID}}"
-  TELEGRAM_VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID: "{{secrets.VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}}"
+  TM_VOIDBR_DEV_1: "${{ secrets.VOIDBR_PACKAGES_TOKEN_BOT }}"
+  TM_VOIDBR_DEV_2: "${{ secrets.CHAT_ID }}"
+  TM_VOIDBR_DEV_3: "${{ secrets.MESSAGE_THREAD_ID_PACKAGE }}"
+  TM_VOIDBR_BR_1: "{{secrets.VOIDBR_BR_PACKAGES_TOKEN_BOT}}"
+  TM_VOIDBR_BR_2: "{{secrets.VOIDBR_BR_PACKAGES_CHAT_ID}}"
+  TM_VOIDBR_BR_3: "{{secrets.VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}}"
   SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
   SERVER_HOST: "${{ secrets.SERVER_HOST }}"
   SERVER_USER: "${{ secrets.SERVER_USER }}"
@@ -278,17 +278,18 @@ jobs:
             # Remove as tags HTML e exibe o resultado no terminal
             echo -e "${green}$(sed 's/<[^>]*>//g' <<< "$MESSAGE")${reset}"
             # Envia a mensagem original com HTML para o Telegram
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN_BOT}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d message_thread_id="${TELEGRAM_MESSAGE_THREAD_ID}" \
+            curl -s -X POST "https://api.telegram.org/bot${TM_VOIDBR_DEV_1}/sendMessage" \
+              -d chat_id="${TM_VOIDBR_DEV_2}" \
+              -d message_thread_id="${TM_VOIDBR_DEV_3}" \
               -d text="${MESSAGE}" \
-              -d parse_mode="HTML"
+              -d parse_mode="HTML" || true
 
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_BR_PACKAGES_TOKEN_BOT}/sendMessage" \
-              -d chat_id="${TELEGRAM_VOIDBR_BR_PACKAGES_CHAT_ID}" \
-              -d message_thread_id="${TELEGRAM_VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}" \
+            curl -s -X POST "https://api.telegram.org/bot${TM_VOIDBR_BR_1}/sendMessage" \
+              -d chat_id="${TM_VOIDBR_BR_2}" \
+              -d message_thread_id="${TM_VOIDBR_BR_3}" \
               -d text="${MESSAGE}" \
-              -d parse_mode="HTML"
+              -d parse_mode="HTML" || true
+
           }
           export -f send_telegram_msg
 
