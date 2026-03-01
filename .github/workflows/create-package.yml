@@ -284,12 +284,19 @@ jobs:
               -d text="${MESSAGE}" \
               -d parse_mode="HTML"
 
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_BR_PACKAGES_TOKEN_BOT}/sendMessage" \
+            response=$(curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_BR_PACKAGES_TOKEN_BOT}/sendMessage" \
               -d chat_id="${TELEGRAM_VOIDBR_BR_PACKAGES_CHAT_ID}" \
               -d message_thread_id="${TELEGRAM_VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
-              -d parse_mode="HTML"
+              -d parse_mode="HTML")
 
+            echo "$response"
+            if echo "$response" | jq -e '.ok == true' >/dev/null 2>&1; then
+              echo "Telegram OK"
+            else
+              echo "Telegram ERROR"
+              exit 1
+            fi
           }
           export -f send_telegram_msg
 
