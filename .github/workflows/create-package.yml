@@ -420,8 +420,11 @@ jobs:
           cd pkgmake/pkgfile
           export LANG=pt_BR.UTF-8
           export LANGUAGE=pt_BR.UTF-8
-          pkgmake -s --packager "$PKGMAKE_PACKAGER"
-          MESSAGE="🚀 <b>[step 2/3] - Pacote construido</b>"
+          if pkgmake -s --packager "$PKGMAKE_PACKAGER"; then
+            MESSAGE="✅ <b>[step 2/3] - Pacote construido</b>"
+          else
+            MESSAGE="❌ <b>[step 2/3] - Falha ao construir pacote</b>"
+          fi
           send_telegram_msg "$MESSAGE"
 
       - name: Sincronizar pacote com repositorio remoto
