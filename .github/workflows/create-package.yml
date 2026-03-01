@@ -1,4 +1,4 @@
-#  create-iso.yml
+#  create-package.yml
 #  Created: 2024/09/15 - 08:10
 #  Altered: qui 19 fev 2026 21:40:30 -04
 #  Updated: dom 01 mar 2026 03:46:54 -04
@@ -53,7 +53,7 @@ on:
         type: string
         description: "Repositorio para construir"
         required: true
-        default: 'voidlinuxbr/repo'
+        default: "voidlinuxbr/repo"
   repository_dispatch: # Permite a execução através de eventos de webhook
     types:
       - webhook
@@ -86,12 +86,39 @@ env:
   LC_ALL: pt_BR.UTF-8
 
 jobs:
-  debug:
+  #debug:
+  #  runs-on: self-hosted
+  #  steps:
+  #  - name: Dump do evento
+  #    run: echo '${{ toJson(github.event) }}'
+
+  setup:
     #runs-on: ubuntu-latest
     runs-on: self-hosted
+    outputs:
+      time: ${{ steps.time.outputs.time }} # Saída do job
+      REPOSITORY_NAME: ${{ steps.get-repo-name.outputs.repo_name }}
+      RELEASE_TAG: ${{ steps.set_vars.outputs.RELEASE_TAG }}
     steps:
-      - name: Dump do evento
-        run: echo '${{ toJson(github.event) }}'
+      - name: Set VARS manually
+        id: set_vars
+        shell: bash
+        run: |
+          # Set release tag manually
+          RELEASE_TAG="${release_tag:-$(date '+%Y%m%d-%H%M')}"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          echo "KERNEL_VERSION=6.12.74_1" >> "$GITHUB_OUTPUT"
+          echo "KERNEL_VERSION=6.12.74_1" >> "$GITHUB_ENV"
+          echo "ISO_BASENAME=voidbr-live-$iso_edition-x86_64-$KERNEL_VERSION_$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "ISO_BASENAME=voidbr-live-$iso_edition-x86_64-$KERNEL_VERSION_$RELEASE_TAG" >> "$GITHUB_ENV"
+
+      - name: Set up volume directory in HOST
+        shell: bash
+        run: |
+          #Set up volume directory in HOST
+          sudo mkdir -p /voidrepo/mnt/lfs
+          sudo mkdir -p /voidrepo/void-mirror/extra
 
   build:
     #runs-on: ubuntu-latest
@@ -103,6 +130,9 @@ jobs:
     container:
       image: vcatafesta/voidlinux-docker:1.5 #seg 16 fev 2026 23:52:08 -04
       options: -v ${{ github.workspace }}:/workspace --privileged
+      volumes:
+        - /voidrepo/mnt/lfs:/mnt/lfs
+        - /voidrepo/void-mirror/extra:/voidrepo/void-mirror/extra
     steps:
       - name: Obter a hora atual
         id: time
@@ -254,11 +284,12 @@ jobs:
               -d text="${MESSAGE}" \
               -d parse_mode="HTML"
 
-            curl -s -X POST "https://api.telegram.org/${TELEGRAM_VOIDBR_TOKEN_BOT}/sendMessage" \
-              -d chat_id="${TELEGRAM_VOIDBR_BR_CHAT_ID}" \
-              -d message_thread_id="${TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID}" \
-              -d text="${MESSAGE}" \
-              -d parse_mode="HTML"
+            #curl -s -X POST "https://api.telegram.org/${TELEGRAM_VOIDBR_TOKEN_BOT}/sendMessage" \
+            #  -d chat_id="${TELEGRAM_VOIDBR_BR_CHAT_ID}" \
+            #  -d message_thread_id="${TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID}" \
+            #  -d text="${MESSAGE}" \
+            #  -d parse_mode="HTML"
+
           }
           export -f send_telegram_msg
 
