@@ -453,7 +453,7 @@ jobs:
           export LANG=pt_BR.UTF-8
           export LANGUAGE=pt_BR.UTF-8
           if pkgmake -s \
-            --packager "$PKGMAKE_PACKAGER"
+            --packager "$PKGMAKE_PACKAGER" \
             --pkgdest /voidrepo/void-mirror/extra
           then
             MESSAGE="✅ <b>[step 2/3] - Pacote construido</b>"
