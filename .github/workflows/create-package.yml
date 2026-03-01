@@ -79,6 +79,8 @@ env:
   PKGMAKE_PACKAGER: "${{ github.event.client_payload.packager || inputs.packager || 'Vilmar Catafesta <vvcatafesta@gmail.com>' }}"
   DEBUG: "${{ github.event.client_payload.tmate || inputs.tmate || false }}"
   REPOSITORY: "${{ github.event.client_payload.repository }}"
+  TELEGRAM_VOIDBR_BR_CHAT_ID: '-1001114128035'
+  TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID: '75354'
 
 jobs:
   build:
@@ -233,6 +235,12 @@ jobs:
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN_BOT}/sendMessage" \
               -d chat_id="${TELEGRAM_CHAT_ID}" \
               -d message_thread_id="${TELEGRAM_MESSAGE_THREAD_ID}" \
+              -d text="${MESSAGE}" \
+              -d parse_mode="HTML"
+
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN_BOT}/sendMessage" \
+              -d chat_id="${TELEGRAM_VOIDBR_BR_CHAT_ID:}" \
+              -d message_thread_id="${TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
               -d parse_mode="HTML"
           }
