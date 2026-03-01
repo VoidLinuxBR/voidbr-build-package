@@ -75,12 +75,12 @@ env:
   PKGMAKE_PACKAGER: "${{ github.event.client_payload.packager || inputs.packager || 'Vilmar Catafesta <vvcatafesta@gmail.com>' }}"
   DEBUG: "${{ github.event.client_payload.tmate || inputs.tmate || false }}"
   REPOSITORY: "${{ github.event.client_payload.repository || inputs.repository }}"
-  TELEGRAM_VOIDBR_BR_CHAT_ID: "-1001114128035"
-  TELEGRAM_VOIDBR_TOKEN_BOT: "bot7990667558:AAHBc7J0yiug3amKxjTKkaJMXF9EEb_eo1c"
-  TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID: "75354"
-  iso_distroname: "voidbr"
-  started_by_user: "${{ github.actor }}"
-  triggered_by_user: "${{ github.triggering_actor }}"
+  TELEGRAM_VOIDBR_BR_PACKAGES_TOKEN_BOT: "{{secrets.VOIDBR_BR_PACKAGES_TOKEN_BOT}}"
+  TELEGRAM_VOIDBR_BR_PACKAGES_CHAT_ID: "{{secrets.VOIDBR_BR_PACKAGES_CHAT_ID}}"
+  TELEGRAM_VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID: "{{secrets.VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}}"
+  ISO_DISTRONAME: "voidbr"
+  STARTED_BY_USER: "${{ github.actor }}"
+  TRIGGERED_BY_USER: "${{ github.triggering_actor }}"
   TARGET_REPOSITORY: "${{github.event_name == 'workflow_dispatch' && inputs.repository || github.event.client_payload.repository}}"
   LANG: pt_BR.UTF-8
   LC_ALL: pt_BR.UTF-8
@@ -267,9 +267,9 @@ jobs:
             MESSAGE="${{ github.workflow }} - $message
             <a href=\"${link_action}\">▶ Job #${GITHUB_RUN_NUMBER}</a>
             <pre>
-            Triggered     : ${started_by_user}
+            Triggered     : ${STARTED_BY_USER}
             Inicio        : $START_TIME
-            Distroname    : $iso_distroname
+            Distroname    : $ISO_DISTRONAME
             Release       : $RELEASE_TAG
             Tmate         : $DEBUG
             Package Name  : $TARGET_REPOSITORY
@@ -282,13 +282,13 @@ jobs:
               -d chat_id="${TELEGRAM_CHAT_ID}" \
               -d message_thread_id="${TELEGRAM_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
-              -d parse_mode="HTML"
+              -d parse_mode="$parse_mode"
 
-            #curl -s -X POST "https://api.telegram.org/${TELEGRAM_VOIDBR_TOKEN_BOT}/sendMessage" \
-            #  -d chat_id="${TELEGRAM_VOIDBR_BR_CHAT_ID}" \
-            #  -d message_thread_id="${TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID}" \
-            #  -d text="${MESSAGE}" \
-            #  -d parse_mode="HTML"
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_BR_PACKAGES_TOKEN_BOT}/sendMessage" \
+              -d chat_id="${TELEGRAM_VOIDBR_BR_PACKAGES_CHAT_ID}" \
+              -d message_thread_id="${TELEGRAM_VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID}" \
+              -d text="${MESSAGE}" \
+              -d parse_mode="$parse_mode"
 
           }
           export -f send_telegram_msg
@@ -301,14 +301,13 @@ jobs:
             [[ -z $parse_mode ]] && parse_mode="HTML"
 
             link_action=https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
-
             MESSAGE="🚀 <b>${{ github.workflow }}</b>
             <pre>
             Job         : #${GITHUB_RUN_NUMBER}
             Workflow    : ${{ github.workflow }}
-            Triggered   : ${started_by_user}
+            Triggered   : ${STARTED_BY_USER}
             Inicio      : $START_TIME
-            Distroname  : $iso_distroname
+            Distroname  : $ISO_DISTRONAME
             Edition     : $iso_edition
             Kernel      : $KERNEL_VERSION
             Release     : $RELEASE_TAG
@@ -320,11 +319,11 @@ jobs:
             MESSAGE="${{ github.workflow }} - $message
             <b>Job           :</b> <a href='${link_action}'>#${GITHUB_RUN_NUMBER}</a>
             <b>Workflow file :</b> <a href='${wf_url}'>${wf_file}</a>
-            <b>Triggered     :</b> <code>${started_by_user}/${triggered_by_user}</code>
+            <b>Triggered     :</b> <code>${STARTED_BY_USER}/${TRIGGERED_BY_USER}</code>
             <b>Start         :</b> <code>${START_TIME}</code>
             <b>End           :</b> <code>${END_TIME}</code>
             <b>Duration      :</b> <code>${hours}h ${minutes}m ${seconds}s</code>
-            <b>Distroname    :</b> <code>${iso_distroname}</code>
+            <b>Distroname    :</b> <code>${ISO_DISTRONAME}</code>
             <b>Iso Profile   :</b> <code>${iso_profile}</code>
             <b>Edition       :</b> <code>${iso_edition}</code>
             <b>Build dir     :</b> <code>${PROFILE_PATH}</code>
@@ -342,7 +341,7 @@ jobs:
               -d chat_id="${TELEGRAM_CHAT_ID}" \
               -d message_thread_id="${TELEGRAM_MESSAGE_THREAD_ID}" \
               -d text="${MESSAGE}" \
-              -d parse_mode="HTML"
+              -d parse_mode="$parse_mode"
           }
           export -f send_telegram_message
           EOF
