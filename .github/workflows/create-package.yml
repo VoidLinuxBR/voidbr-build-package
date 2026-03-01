@@ -67,12 +67,14 @@ on:
       - "**"
 
 env:
+  GITHUB_TOKEN: "${{ secrets.ORGANIZATION_TOKEN }}"
+  TELEGRAM_VOIDBR_PACKAGES_TOKEN_BOT: "${{ secrets.VOIDBR_PACKAGES_TOKEN_BOT }}"
+  TELEGRAM_CHAT_ID: "${{ secrets.CHAT_ID }}"
+  TELEGRAM_MESSAGE_THREAD_ID_PACKAGE: "${{ secrets.MESSAGE_THREAD_ID_PACKAGE }}"
   SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
   SERVER_HOST: "${{ secrets.SERVER_HOST }}"
   SERVER_USER: "${{ secrets.SERVER_USER }}"
   SERVER_PORT: "${{ secrets.SERVER_PORT }}"
-  TS_VOIDREPO_HOST: "${{ secrets.TS_VOIDREPO_HOST }}"
-  TS_VOIDREPO_PORT: "${{ secrets.TS_VOIDREPO_PORT }}"
   PKGMAKE_PRIVATE_KEY: "${{ secrets.PKGMAKE_PRIVATE_KEY }}"
   PKGMAKE_PACKAGER: "${{ github.event.client_payload.packager || inputs.packager || 'Vilmar Catafesta <vvcatafesta@gmail.com>' }}"
   DEBUG: "${{ github.event.client_payload.tmate || inputs.tmate || false }}"
@@ -112,11 +114,6 @@ jobs:
 
       - name: Create Global Helpers Script - Definir a função send_telegram_message no script temporário
         shell: bash
-        env:
-          TELEGRAM_TOKEN: "${{ inputs.telegram_token }}"
-          TELEGRAM_VOIDBR_ISO_TOKEN_BOT: "${{ inputs.voidbr_packages_token_bot }}"
-          TELEGRAM_CHAT_ID: "${{ inputs.telegram_chat_id }}"
-          TELEGRAM_MESSAGE_THREAD_ID: "${{ inputs.telegram_message_thread_id }}"
         run: |
           #Definir a função send_telegram_message no script temporário
           sudo rm -rf /tmp/send_telegram_message.sh  # Remove se for diretório
@@ -233,9 +230,9 @@ jobs:
             # Remove as tags HTML e exibe o resultado no terminal
             echo -e "${green}$(sed 's/<[^>]*>//g' <<< "$MESSAGE")${reset}"
             # Envia a mensagem original com HTML para o Telegram
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_ISO_TOKEN_BOT}/sendMessage" \
-              -d chat_id="${CHAT_ID}" \
-              -d message_thread_id="${MESSAGE_THREAD_ID}" \
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_PACKAGES_TOKEN_BOT}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d message_thread_id="${TELEGRAM_MESSAGE_THREAD_ID_PACKAGE}" \
               -d text="${MESSAGE}" \
               -d parse_mode="HTML"
           }
@@ -286,9 +283,9 @@ jobs:
             <b>Download      :</b> <a href='${DOWNLOAD_URL_GZ}'>${ISO_BASE_NAME}.tar.gz</a> <code>(${iso_size})</code>"
 
             # Envia a mensagem original com HTML para o Telegram
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_ISO_TOKEN_BOT}/sendMessage" \
-              -d chat_id="${CHAT_ID}" \
-              -d message_thread_id="${MESSAGE_THREAD_ID}" \
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_VOIDBR_PACKAGES_TOKEN_BOT}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d message_thread_id="${TELEGRAM_MESSAGE_THREAD_ID_PACKAGE}" \
               -d text="${MESSAGE}" \
               -d parse_mode="HTML"
           }
