@@ -82,6 +82,7 @@ env:
   TELEGRAM_VOIDBR_BR_CHAT_ID: '-1001114128035'
   TELEGRAM_VOIDBR_TOKEN_BOT: 'bot7990667558:AAHBc7J0yiug3amKxjTKkaJMXF9EEb_eo1c'
   TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID: '75354'
+  iso_distroname: 'voidbr'
 
 jobs:
   build:
@@ -226,7 +227,12 @@ jobs:
             MESSAGE="${{ github.workflow }} - $message
             <pre>
             Job           : #${GITHUB_RUN_NUMBER}
-            Edition       : $iso_edition
+            Triggered     : ${started_by_user}
+            Inicio        : $START_TIME
+            Distroname    : $iso_distroname
+            Kernel        : $KERNEL_VERSION
+            Release       : $RELEASE_TAG
+            Tmate         : $DEBUG
             Package Name  : "${{ github.event.client_payload.repository }}"
             </pre>"
 
