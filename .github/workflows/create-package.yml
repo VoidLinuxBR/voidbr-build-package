@@ -57,14 +57,13 @@ on:
         type: string
         description: "Repositorio para construir"
         required: true
-
-  #  schedule:  # Executa automaticamente toda sexta-feira às 05:00
-  #    - cron: '0 5 * * 5'
-
   repository_dispatch: # Permite a execução através de eventos de webhook
     types:
       - webhook
       - "**"
+
+  #  schedule:  # Executa automaticamente toda sexta-feira às 05:00
+  #    - cron: '0 5 * * 5'
 
 env:
   GITHUB_TOKEN: "${{ secrets.ORGANIZATION_TOKEN }}"
@@ -78,11 +77,15 @@ env:
   PKGMAKE_PRIVATE_KEY: "${{ secrets.PKGMAKE_PRIVATE_KEY }}"
   PKGMAKE_PACKAGER: "${{ github.event.client_payload.packager || inputs.packager || 'Vilmar Catafesta <vvcatafesta@gmail.com>' }}"
   DEBUG: "${{ github.event.client_payload.tmate || inputs.tmate || false }}"
-  REPOSITORY: "${{ github.event.client_payload.repository }}"
+  REPOSITORY: "${{ github.event.client_payload.repository || inputs.repository }}"
   TELEGRAM_VOIDBR_BR_CHAT_ID: '-1001114128035'
   TELEGRAM_VOIDBR_TOKEN_BOT: 'bot7990667558:AAHBc7J0yiug3amKxjTKkaJMXF9EEb_eo1c'
   TELEGRAM_VOIDBR_BR_MESSAGE_THREAD_ID: '75354'
   iso_distroname: 'voidbr'
+  started_by_user: "${{ github.actor }}"
+  triggered_by_user: "${{ github.triggering_actor }}"
+
+
 
 jobs:
   build:
@@ -230,10 +233,9 @@ jobs:
             Triggered     : ${started_by_user}
             Inicio        : $START_TIME
             Distroname    : $iso_distroname
-            Kernel        : $KERNEL_VERSION
             Release       : $RELEASE_TAG
             Tmate         : $DEBUG
-            Package Name  : "${{ github.event.client_payload.repository }}"
+            Package Name  : $REPOSITORY
             </pre>"
 
             # Remove as tags HTML e exibe o resultado no terminal
