@@ -53,6 +53,7 @@ on:
         type: string
         description: "Repositorio para construir"
         required: true
+        default: 'voidlinuxbr/repo'
   repository_dispatch: # Permite a execução através de eventos de webhook
     types:
       - webhook
