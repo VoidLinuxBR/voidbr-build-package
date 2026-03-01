@@ -224,7 +224,7 @@ jobs:
             <pre>
             Job           : #${GITHUB_RUN_NUMBER}
             Edition       : $iso_edition
-            Package Name  : $REPOSITORY
+            Package Name  : "${{ github.event.client_payload.repository }}"
             </pre>"
 
             # Remove as tags HTML e exibe o resultado no terminal
@@ -379,14 +379,14 @@ jobs:
           repository: ${{github.event.client_payload.repository}}
           token: ${{ secrets.ORGANIZATION_TOKEN }}
           fetch-depth: 1
-          path: "$REPOSITORY"
+          path: pkgmake
 
       - name: Build pkg
         shell: bash
         run: |
           source /tmp/send_telegram_message.sh
           cp -Rpa /root/. $HOME/. || true
-          cd "$REPOSITORY"/pkgfile
+          cd pkgmake/pkgfile
           pkgmake -s --packager "$PKGMAKE_PACKAGER"
           MESSAGE="🚀 <b>[step 2/3] - Pacote construido</b>"
           send_telegram_msg "$MESSAGE"
