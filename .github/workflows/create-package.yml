@@ -411,7 +411,6 @@ jobs:
           xbps-reconfigure -f glibc-locales
           export LANG=pt_BR.UTF-8
           export LANGUAGE=pt_BR.UTF-8
-          export LC_ALL=pt_BR.UTF-8
 
       - name: Build pkg
         shell: bash
@@ -421,7 +420,6 @@ jobs:
           cd pkgmake/pkgfile
           export LANG=pt_BR.UTF-8
           export LANGUAGE=pt_BR.UTF-8
-          export LC_ALL=pt_BR.UTF-8
           pkgmake -s --packager "$PKGMAKE_PACKAGER"
           MESSAGE="🚀 <b>[step 2/3] - Pacote construido</b>"
           send_telegram_msg "$MESSAGE"
