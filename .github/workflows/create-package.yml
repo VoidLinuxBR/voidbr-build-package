@@ -455,6 +455,11 @@ jobs:
           if pkgmake -s \
             --packager "$PKGMAKE_PACKAGER" \
             --pkgdest /voidrepo/void-mirror/extra
+            source PKGFILE
+            RELEASE_TAG=$(find /voidrepo/void-mirror/extra -type f -iname "${pkgname}*.$PKG_EXT" \
+            | sort -Vr \
+            | awk -F "$FETCH_RE" '!seen[$1]++')
+            echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
           then
             MESSAGE="✅ <b>[step 2/3] - Pacote construido</b>"
           else
