@@ -82,6 +82,7 @@ env:
   STARTED_BY_USER: "${{ github.actor }}"
   TRIGGERED_BY_USER: "${{ github.triggering_actor }}"
   TARGET_REPOSITORY: "${{github.event_name == 'workflow_dispatch' && inputs.repository || github.event.client_payload.repository}}"
+  FULL_PACKAGE_NAME: ''
   #LANG: pt_BR.UTF-8
   #LC_ALL: pt_BR.UTF-8
 
@@ -270,7 +271,7 @@ jobs:
             Triggered     : ${STARTED_BY_USER}
             Inicio        : $START_TIME
             Distroname    : $ISO_DISTRONAME
-            Release       : $RELEASE_TAG
+            Release       : $FULL_PACKAGE_NAME
             Tmate         : $DEBUG
             Package Name  : $TARGET_REPOSITORY
             </pre>"
@@ -456,10 +457,10 @@ jobs:
             --packager "$PKGMAKE_PACKAGER" \
             --pkgdest /voidrepo/void-mirror/extra
             source PKGFILE
-            RELEASE_TAG=$(find /voidrepo/void-mirror/extra -type f -iname "${pkgname}*.$PKG_EXT" \
+            FULL_PACKAGE_NAME=$(find /voidrepo/void-mirror/extra -type f -iname "${pkgname}*.$PKG_EXT" \
             | sort -Vr \
             | awk -F "$FETCH_RE" '!seen[$1]++')
-            echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+            echo "FULL_PACKAGE_NAME=$FULL_PACKAGE_NAME" >> "$GITHUB_ENV"
           then
             MESSAGE="✅ <b>[step 2/3] - Pacote construido</b>"
           else
