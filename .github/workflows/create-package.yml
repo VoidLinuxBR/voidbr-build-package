@@ -453,15 +453,19 @@ jobs:
           cd pkgmake/pkgfile
           export LANG=pt_BR.UTF-8
           export LANGUAGE=pt_BR.UTF-8
+          pkgver=$(date +%Y%m%d)
+          pkgrel=$(date +%H%M)
+          export pkgver pkgrel
           if pkgmake -s \
             --packager "$PKGMAKE_PACKAGER" \
             --pkgdest /voidrepo/void-mirror/extra
             source PKGFILE
             PKG_EXT='xbps'
             FETCH_RE='-[^-]+[0-9]+[^.]*.xbps$'
-            FULL_PACKAGE_NAME=$(find /voidrepo/void-mirror/extra -type f -iname "${pkgname}*.$PKG_EXT" \
-            | sort -Vr \
-            | awk -F "$FETCH_RE" '!seen[$1]++')
+            #FULL_PACKAGE_NAME=$(find /voidrepo/void-mirror/extra -type f -iname "${pkgname}*.$PKG_EXT" \
+            #| sort -Vr \
+            #| awk -F "$FETCH_RE" '!seen[$1]++')
+            FULL_PACKAGE_NAME=$(ls -t /voidrepo/void-mirror/extra/${pkgname}*.xbps | head -n1)
             echo "FULL_PACKAGE_NAME=$FULL_PACKAGE_NAME" >> "$GITHUB_ENV"
           then
             MESSAGE="✅ <b>[step 2/3] - Pacote construido</b>"
