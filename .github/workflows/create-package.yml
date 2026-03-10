@@ -479,9 +479,10 @@ jobs:
         shell: bash
         run: |
           source /tmp/send_telegram_message.sh
-          pkgmake --pkgdest /voidrepo/void-mirror/extra \
-                  --reindex-all
-          chili-make-repo -A void
+          cd /voidrepo/void-mirror/extra
+          #pkgmake --pkgdest /voidrepo/void-mirror/extra \
+          #        --reindex-all
+          chili-make-repo -v -R void
 
       - name: Notificar sucesso
         if: ${{ success() }}
