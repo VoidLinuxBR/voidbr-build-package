@@ -436,9 +436,9 @@ jobs:
             echo "remote_USER=$SERVER_USER"
             echo "remote_PATH=/home/$SERVER_USER/domains/chililinux.com/public_html/void/current"
             echo "remote_PORT=$SERVER_PORT"
-            echo "PACKAGER='Vilmar Catafesta <gmail.com>'"
+            echo "PACKAGER='Vilmar Catafesta <vcatafesta@gmail.com>'"
             echo "prefix_DB=void"
-          } > /root/.chili-make-repo.conf
+          } | tee /root/.chili-make-repo.conf "$HOME/.chili-make-repo.conf" > /dev/null || true
 
       - name: Checkout do pacote recebido
         uses: actions/checkout@v4
