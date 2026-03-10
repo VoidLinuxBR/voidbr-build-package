@@ -365,7 +365,9 @@ jobs:
           replicate
 
       - name: update
+        shell: bash
         run: |
+          rm /etc/xbps.d/0{2..9}-* || true
           xbps-install -Syu xbps || true
           xbps-install --update --yes void-utils voidbr-pkgmake tmate openssh git glibc-locales shfmt || true
           vinstall -Scc || true
