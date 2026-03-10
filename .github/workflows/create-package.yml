@@ -366,9 +366,9 @@ jobs:
 
       - name: update
         run: |
-          xbps-install -Syu xbps
-          xbps-install --update --yes voidbr-pkgmake void-utils tmate openssh git glibc-locales shfmt
-          vinstall -Scc
+          xbps-install -Syu xbps || true
+          xbps-install --update --yes void-utils voidbr-pkgmake tmate openssh git glibc-locales shfmt || true
+          vinstall -Scc || true
 
       - name: Configurar locale
         shell: bash
