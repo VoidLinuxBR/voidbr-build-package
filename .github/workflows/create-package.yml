@@ -1,7 +1,7 @@
 #  create-package.yml
 #  Created: 2024/09/15 - 08:10
 #  Altered: qui 19 fev 2026 21:40:30 -04
-#  Updated: dom 01 mar 2026 03:46:54 -04
+#  Updated: qua 28 out 2026 13:55:55 -04
 #
 #  Copyright (c) 2024-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  All rights reserved.
@@ -458,23 +458,32 @@ jobs:
           pkgver=$(date +%Y%m%d)
           pkgrel=$(date +%H%M)
           export pkgver pkgrel
-          if pkgmake -s \
+
+          # marca o momento do inicio do build, para achar so pacotes gerados agora
+          marker=$(mktemp)
+
+          # 1) se o pkgmake falhar, para aqui
+          if ! pkgmake -s \
             --packager "$PKGMAKE_PACKAGER" \
-            --pkgdest /voidrepo/void-mirror/extra
-            source PKGFILE
-            PKG_EXT='xbps'
-            FETCH_RE='-[^-]+[0-9]+[^.]*.xbps$'
-            #FULL_PACKAGE_NAME=$(find /voidrepo/void-mirror/extra -type f -iname "${pkgname}*.$PKG_EXT" \
-            #| sort -Vr \
-            #| awk -F "$FETCH_RE" '!seen[$1]++')
-            FULL_PACKAGE_NAME=$(ls -t /voidrepo/void-mirror/extra/${pkgname}*.xbps | head -n1)
-            echo "FULL_PACKAGE_NAME=$FULL_PACKAGE_NAME" >> "$GITHUB_ENV"
-          then
-            MESSAGE="✅ <b>[step 2/3] - Pacote construido</b>"
-          else
-            MESSAGE="❌ <b>[step 2/3] - Falha ao construir pacote</b>"
+            --pkgdest /voidrepo/void-mirror/extra; then
+            send_telegram_msg "❌ <b>[step 2/3] - Falha ao construir pacote (pkgmake retornou erro)</b>"
+            exit 1
           fi
-          send_telegram_msg "$MESSAGE"
+
+          # 2) confere se saiu um .xbps NOVO (mais novo que o marker)
+          source PKGFILE
+          FULL_PACKAGE_NAME=$(find /voidrepo/void-mirror/extra -maxdepth 1 -type f \
+            -name "${pkgname}-*.xbps" -newer "$marker" -printf '%T@ %p\n' \
+            | sort -rn | head -n1 | cut -d' ' -f2-)
+          export FULL_PACKAGE_NAME
+
+          if [[ -z $FULL_PACKAGE_NAME ]]; then
+            send_telegram_msg "❌ <b>[step 2/3] - pkgmake terminou, mas nenhum pacote novo de ${pkgname} foi gerado</b>"
+            exit 1
+          fi
+
+          echo "FULL_PACKAGE_NAME=$FULL_PACKAGE_NAME" >> "$GITHUB_ENV"
+          send_telegram_msg "✅ <b>[step 2/3] - Pacote construido</b>"
 
       - name: Sincronizar pacote com repositorio remoto
         if: ${{ success() }}
