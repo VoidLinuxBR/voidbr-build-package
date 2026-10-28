@@ -1,7 +1,7 @@
 #  create-package.yml
 #  Created: 2024/09/15 - 08:10
 #  Altered: qui 19 fev 2026 21:40:30 -04
-#  Updated: qua 28 out 2026 17:43:20 -04
+#  Updated: qua 28 out 2026 18:11:55 -04
 #
 #  Copyright (c) 2024-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  All rights reserved.
@@ -273,7 +273,18 @@ jobs:
         shell: bash
         run: |
           cd "$REPO_DIR"
-          chili-make-repo -v -R void
+
+          # indice do xlocate (nao bloqueia a publicacao se falhar)
+          if command -v voidbr-xlocate-index >/dev/null; then
+            voidbr-xlocate-index || echo "::warning::voidbr-xlocate-index falhou"
+          else
+            echo "::warning::voidbr-xlocate-index nao encontrado no container"
+          fi
+
+          # reindexa o repodata local antes de enviar
+          pkgmake --reindex-only --pkgdest "$REPO_DIR"
+
+          chili-make-repo --verbose --organization void --sync-remote-with-local
 
       - name: Notificar sucesso
         if: ${{ success() }}
