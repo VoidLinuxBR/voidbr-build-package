@@ -1,7 +1,7 @@
 #  create-package.yml
 #  Created: 2024/09/15 - 08:10
 #  Altered: qui 19 fev 2026 21:40:30 -04
-#  Updated: qua 28 out 2026 18:16:31 -04
+#  Updated: qua 28 out 2026 18:33:49 -04
 #
 #  Copyright (c) 2024-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  All rights reserved.
@@ -47,7 +47,7 @@
 #    2. o job sobe o container vcatafesta/voidlinux-docker com a pasta
 #       /voidrepo/void-mirror/extra do servidor montada como volume
 #    3. pkgmake gera o .xbps direto nessa pasta (= repositorio voidbr)
-#    4. reindexa (voidbr-xlocate-index + pkgmake --reindex-only)
+#    4. reindexa (pkgmake --reindex-only, depois voidbr-xlocate-index)
 #    5. chili-make-repo empurra a pasta para a Hostinger
 #    6. notifica cada etapa nos grupos do Telegram
 #
@@ -330,22 +330,23 @@ jobs:
           echo "FULL_PACKAGE_NAME=$FULL_PACKAGE_NAME" >> "$GITHUB_ENV"
           send_telegram_msg "✅ <b>[step 2/3] - Pacote construido</b>"
 
-      # mesma sequencia usada localmente: indice do xlocate, reindexa o
-      # repodata e empurra o repositorio para a Hostinger (organizacao void)
+      # mesma sequencia usada localmente: reindexa o repodata, gera o indice
+      # do xlocate e empurra o repositorio para a Hostinger (organizacao void)
       - name: Sincronizar pacote com repositorio remoto
         shell: bash
         run: |
           cd "$REPO_DIR"
 
-          # indice do xlocate (nao bloqueia a publicacao se falhar)
+          # reindexa o repodata local antes de enviar
+          pkgmake --reindex-only --pkgdest "$REPO_DIR"
+
+          # indice do xlocate, depois do reindex (ele le o repodata);
+          # nao bloqueia a publicacao se falhar
           if command -v voidbr-xlocate-index >/dev/null; then
             voidbr-xlocate-index || echo "::warning::voidbr-xlocate-index falhou"
           else
             echo "::warning::voidbr-xlocate-index nao encontrado no container"
           fi
-
-          # reindexa o repodata local antes de enviar
-          pkgmake --reindex-only --pkgdest "$REPO_DIR"
 
           chili-make-repo --verbose --organization void --sync-remote-with-local
 
