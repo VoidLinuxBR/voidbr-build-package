@@ -1,7 +1,7 @@
 #  create-package.yml
 #  Created: 2024/09/15 - 08:10
 #  Altered: qui 19 fev 2026 21:40:30 -04
-#  Updated: qua 28 out 2026 18:11:55 -04
+#  Updated: qua 28 out 2026 18:16:31 -04
 #
 #  Copyright (c) 2024-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  All rights reserved.
@@ -26,6 +26,53 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
+#
+#  VISAO GERAL
+#  -----------
+#  Constroi um pacote .xbps a partir de um repositorio da organizacao
+#  VoidLinuxBR (que tenha pkgfile/PKGFILE) e publica no repositorio VoidBR.
+#
+#  Lugares envolvidos:
+#    - servidor voidbr : onde rodam os runners self-hosted (void-runner-0..10,
+#                        servicos runit github-runner*). A pasta
+#                        /voidrepo/void-mirror/extra deste servidor E o
+#                        repositorio voidbr.
+#    - Hostinger       : repo.chililinux.com (organizacao "void" do
+#                        chili-make-repo). Recebe o repositorio por rsync/ssh.
+#
+#  Fluxo:
+#    1. o repositorio do pacote (ex: voidbr-lynxfetch) faz push no main e o
+#       trigger-package.yml dele dispara um repository_dispatch aqui, com
+#       client_payload.repository = "VoidLinuxBR/<pacote>"
+#    2. o job sobe o container vcatafesta/voidlinux-docker com a pasta
+#       /voidrepo/void-mirror/extra do servidor montada como volume
+#    3. pkgmake gera o .xbps direto nessa pasta (= repositorio voidbr)
+#    4. reindexa (voidbr-xlocate-index + pkgmake --reindex-only)
+#    5. chili-make-repo empurra a pasta para a Hostinger
+#    6. notifica cada etapa nos grupos do Telegram
+#
+#  Disparo manual: Actions -> VoidBR Build Package -> Run workflow,
+#  informando o repositorio (ex: VoidLinuxBR/voidbr-lynxfetch).
+#
+#  Secrets usados:
+#    ORGANIZATION_TOKEN            token com acesso aos repositorios da org
+#    SSH_PRIVATE_KEY               chave ssh para a Hostinger (rsync)
+#    SERVER_HOST/USER/PORT         acesso ssh a Hostinger
+#    PKGMAKE_PRIVATE_KEY           chave RSA que assina pacotes e repodata
+#    CHILI_SECRETKEY               SECRETKEY do .chili-make-repo.conf
+#    VOIDBR_PACKAGES_TOKEN_BOT,
+#    CHAT_ID, MESSAGE_THREAD_ID_PACKAGE        bot/grupo Telegram VoidBR Dev
+#    VOIDBR_BR_PACKAGES_TOKEN_BOT,
+#    VOIDBR_BR_PACKAGES_CHAT_ID,
+#    VOIDBR_BR_PACKAGES_MESSAGE_THREAD_ID      bot/grupo Telegram VoidBR BR
+#
+#  Cuidados:
+#    - dentro do container o HOME e /github/home (nao /root): chaves e confs
+#      sao criados em /root e copiados para o $HOME
+#    - se os builds ficarem em "Waiting for a runner", veja os runners no
+#      servidor (sv status /var/service/github-runner*) e o _diag de cada um
+#
+##############################################################################
 name: VoidBR Build Package
 
 # um build por vez: todos escrevem em /voidrepo/void-mirror/extra e
@@ -35,6 +82,7 @@ concurrency:
   cancel-in-progress: false
 
 on:
+  # disparo manual pela aba Actions
   workflow_dispatch:
     inputs:
       tmate:
@@ -52,11 +100,14 @@ on:
         description: "Repositorio para construir"
         required: true
         default: "voidlinuxbr/repo"
+  # disparo pelos repositorios de pacote (trigger-package.yml)
   repository_dispatch:
     types:
       - webhook
       - "**"
 
+# variaveis globais; o packager/repositorio vem do client_payload (dispatch)
+# ou dos inputs (manual)
 env:
   GITHUB_TOKEN: "${{ secrets.ORGANIZATION_TOKEN }}"
   TM_VOIDBR_DEV_1: "${{ secrets.VOIDBR_PACKAGES_TOKEN_BOT }}"
@@ -95,6 +146,8 @@ jobs:
         # cache de pacotes xbps reaproveitado entre builds
         - /voidrepo/xbps-cache:/var/cache/xbps
     steps:
+      # cria /tmp/send_telegram_message.sh com msg/replicate/send_telegram_msg,
+      # usado pelos steps seguintes via "source"
       - name: Preparar helpers e notificar inicio
         shell: bash
         run: |
@@ -155,6 +208,8 @@ jobs:
           source /tmp/send_telegram_message.sh
           send_telegram_msg "🚀 <b>[step 1/3] - Iniciando construcao do pacote $TARGET_REPOSITORY</b>"
 
+      # atualiza xbps/pkgmake e garante o locale pt_BR (o cache do xbps vem
+      # do volume /voidrepo/xbps-cache, entao so baixa o que mudou)
       - name: Atualizar ferramentas e locale
         shell: bash
         run: |
@@ -173,6 +228,7 @@ jobs:
           # o HOME no container e /github/home: leva a config do root (.gnupg etc.)
           cp -Rpa /root/. "$HOME/." || true
 
+      # sessao tmate para depuracao, so quando DEBUG/tmate = true
       - name: Setup TMATE Session in CONTAINER
         uses: mxschmitt/action-tmate@v3
         if: ${{ env.DEBUG == 'true' }}
@@ -180,6 +236,8 @@ jobs:
           install-dependencies: false
           detached: true
 
+      # cria ~/.ssh (chave rsync da Hostinger + privkey.pem do pkgmake) e o
+      # ~/.chili-make-repo.conf, em /root e no $HOME do container
       - name: Configurar chaves e chili-make-repo
         shell: bash
         run: |
@@ -226,6 +284,7 @@ jobs:
             cp -a /root/.chili-make-repo.conf "$HOME/.chili-make-repo.conf"
           fi
 
+      # clona o repositorio do pacote em ./pkgmake
       - name: Checkout do pacote recebido
         uses: actions/checkout@v5
         with:
@@ -234,6 +293,8 @@ jobs:
           fetch-depth: 1
           path: pkgmake
 
+      # gera o .xbps em $REPO_DIR; falha se o pkgmake der erro ou se nenhum
+      # pacote novo aparecer (evita publicar um pacote antigo por engano)
       - name: Build pkg ${{ env.TARGET_REPOSITORY }}
         shell: bash
         run: |
@@ -269,6 +330,8 @@ jobs:
           echo "FULL_PACKAGE_NAME=$FULL_PACKAGE_NAME" >> "$GITHUB_ENV"
           send_telegram_msg "✅ <b>[step 2/3] - Pacote construido</b>"
 
+      # mesma sequencia usada localmente: indice do xlocate, reindexa o
+      # repodata e empurra o repositorio para a Hostinger (organizacao void)
       - name: Sincronizar pacote com repositorio remoto
         shell: bash
         run: |
@@ -286,6 +349,7 @@ jobs:
 
           chili-make-repo --verbose --organization void --sync-remote-with-local
 
+      # mensagens finais no Telegram
       - name: Notificar sucesso
         if: ${{ success() }}
         shell: bash
