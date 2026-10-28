@@ -1,7 +1,7 @@
 #  create-package.yml
 #  Created: 2024/09/15 - 08:10
 #  Altered: qui 19 fev 2026 21:40:30 -04
-#  Updated: qua 28 out 2026 13:55:55 -04
+#  Updated: qua 28 out 2026 17:28:54 -04
 #
 #  Copyright (c) 2024-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  All rights reserved.
@@ -406,7 +406,8 @@ jobs:
             echo "  HostName $SERVER_HOST"
             echo "  Port $SERVER_PORT"
             echo "  User $SERVER_USER"
-            echo "  IdentityFile ~/.ssh/id_rsa"
+            echo "  IdentityFile /root/.ssh/id_rsa"
+            echo "  UserKnownHostsFile /root/.ssh/known_hosts"
             echo "  IdentitiesOnly yes"
           }  > /root/.ssh/config
 
@@ -423,6 +424,13 @@ jobs:
           ssh-keyscan -p "$SERVER_PORT" 147.93.38.151 >> /root/.ssh/known_hosts
           ssh-keyscan -p "$TS_VOIDREPO_PORT" "$TS_VOIDREPO_HOST" >> /root/.ssh/known_hosts 2>/dev/null || true
           chmod 600 /root/.ssh/known_hosts || true
+          chmod 600 /root/.ssh/config
+
+          # no container o HOME e /github/home (pkgmake procura a chave em $HOME/.ssh)
+          if [[ "$HOME" != /root ]]; then
+            rm -rf "$HOME/.ssh"
+            cp -a /root/.ssh "$HOME/.ssh"
+          fi
 
       - name: Create .chili-make-repo.conf
         shell: bash
